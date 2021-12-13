@@ -26,7 +26,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     const storagedCart = localStorage.getItem("@RocketShoes:cart"); //pegando valore salvos no localStorage
 
     if (storagedCart) {
-      return JSON.parse(storagedCart); // como vem string temos que converter em json.parse
+      return JSON.parse(storagedCart); // como vem string temos que converter em json.parse para transformar em array.
     }
 
     return [];
@@ -36,6 +36,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     try {
       //adicionar um produto ao carrinho.
       const updatedCart = [...cart]; //criando novo array com o array cart, assim não mudamos o array de cart
+      //verificar se o produto existe.
       const productExists = updatedCart.find(
         (product) => product.id === productId
       ); //fazendo um busca com id recebido do parâmentro da função.
@@ -44,7 +45,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       const stock = await api.get(`/stock/${productId}`);
 
       const stockAmount = stock.data.amount; //pegando o valor de data.amount.
-      //validando o produto do carrinho.
+      //validando o produto no carrinho.
       const currentAmount = productExists ? productExists.amount : 0;
       //quantidade desejada.
       const amount = currentAmount + 1; //atual mais um.
@@ -52,30 +53,32 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       //verificando os valores.
       //verificando o estoque com a quantia desejada do cliente.
       if (amount > stockAmount) {
-        toast.error("Quantidade soliciata fora de estoque");
+        toast.error("Quantidade solicitada fora de estoque");
         return; // retornar desse ponto.
       }
 
       //verificar se o produto exite de fato
       if (productExists) {
-        productExists.amount = amount; //atualizar o produto. como fizemos um novo array, pegando as referência do array cart,
+        productExists.amount = amount; //atualizar a quantidade do produto no carrinho. como fizemos um novo array, pegando as referência do array cart,
         //conseguimos atualizar o array de productExists sem alterar o cart assim respeitamos a regra de imutabilidade do react.
       } else {
-        //se for produto novo pegar o api get.
+        //se for produto novo pegar da api get.
         const product = await api.get(`/products/${productId}`);
 
-        //adicionando novo produto com 1.
+        //adicionando o produto pela primeira vez colocamos valor 1.
         const newProduct = {
           ...product.data,
           amount: 1,
         };
+        //perpetuando
         updatedCart.push(newProduct);
       }
       //para perpetuar as alteração do update cart.
       setCart(updatedCart);
+      //atualizar localStore. Mais temos que converter para string.
       localStorage.setItem("@RocketShoes:cart", JSON.stringify(updatedCart));
     } catch {
-      toast.error("Error na adição do produto");
+      toast.error("Erro na adição do produto");
     }
   };
 
