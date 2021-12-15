@@ -1,4 +1,11 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "react-toastify";
 import { api } from "../services/api";
 import { Product, Stock } from "../types";
@@ -31,6 +38,20 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
     return [];
   });
+
+  const prevCartRef = useRef<Product[]>();
+  //isso faz atualização no valor caso as variaveis for mudadas.
+  useEffect(() => {
+    prevCartRef.current = cart;
+  });
+
+  const cartPreviousValue = prevCartRef.current ?? cart;
+
+  useEffect(() => {
+    if (cartPreviousValue !== cart) {
+      localStorage.setItem("@RocketShoes:cart", JSON.stringify(cart));
+    }
+  }, [cart, cartPreviousValue]);
 
   const addProduct = async (productId: number) => {
     try {
@@ -76,7 +97,6 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       //para perpetuar as alteração do update cart.
       setCart(updatedCart);
       //atualizar localStore. Mais temos que converter para string.
-      localStorage.setItem("@RocketShoes:cart", JSON.stringify(updatedCart));
     } catch {
       toast.error("Erro na adição do produto");
     }
@@ -84,9 +104,25 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
   const removeProduct = (productId: number) => {
     try {
-      // TODO;
+      //para remover temos que verificar se está no carrinho certo?
+      const updatedCart = [...cart]; //aqui usamos assim para mantar a imutabilidade.
+      //usando o index podemos usar splice para remover do array.
+      const productIndex = updatedCart.findIndex(
+        (product) => product.id === productId
+      );
+      //agora a condição para validar o argumento.
+      if (productIndex >= 0) {
+        //O SPLICE pode remover um elemento do array, se nescessario  adicionar também.
+        //mais vamos remover, splice o primeiro parametro é onde vamos começar a remover/adicionar e o outro
+        // é quantos quer remover.
+        updatedCart.splice(productIndex, 1);
+        setCart(updatedCart);
+      } else {
+        //aqui forçamos o erro para cair no catch.
+        throw Error();
+      }
     } catch {
-      // TODO;
+      toast.error("Erro na remoção do produto");
     }
   };
 
@@ -95,9 +131,34 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     amount,
   }: UpdateProductAmount) => {
     try {
-      // TODO;
+      //verificando para sair imediatamente.
+      if (amount <= 0) {
+        return;
+      }
+
+      const stock = await api.get(`stock/${productId}`);
+      const stockAmount = stock.data.amount;
+
+      if (amount > stockAmount) {
+        toast.error("Quantidade solicitada fora de estoque");
+        return;
+      }
+
+      const updatedCart = [...cart];
+      const productExists = updatedCart.find(
+        (product) => product.id === productId
+      );
+
+      //agora validade se existe o produto.
+      if (productExists) {
+        productExists.amount = amount;
+        setCart(updatedCart);
+      } else {
+        //forçamos o erro para cair no catch.
+        throw Error();
+      }
     } catch {
-      // TODO;
+      toast.error("Erro na alteração de quantidade do produto");
     }
   };
 
