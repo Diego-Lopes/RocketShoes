@@ -9,7 +9,7 @@ Desafio Chapter 02 do curso Ignite da Rocketseat | Trilha de Reactjs
 ```bash
 
 # Clone este repositório
-$ git clone https://github.com/Diego-Lopes/desafioDoWhile
+$ git clone https://github.com/Diego-Lopes/RocketShoes.git
 
 # Acesse a pasta do projeto no seu terminal/cmd
 $ cd RocketShoes
