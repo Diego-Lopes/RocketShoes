@@ -2,8 +2,6 @@
 
 Desafio Chapter 02 do curso Ignite da Rocketseat | Trilha de Reactjs
 
-<img src="./public/img/rocketshoes.png"/>
-
 <h2>Como Iniciar o projeto? 🎲 </h2>
 
 ```bash
@@ -24,3 +22,5 @@ $ yarn server
 $ yarn start
 
 ```
+
+<img src="./public/img/rocketshoes.png"/>
